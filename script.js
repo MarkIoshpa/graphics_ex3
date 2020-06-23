@@ -1,6 +1,6 @@
 // Graphics Homework 3
 
-var camera = 100;
+var camera = 200;
 const WIDTH = 800, HEIGHT = 800;
 
 // On page load
@@ -34,7 +34,7 @@ function drawObject(context, data) {
 
 // Draws 3d object according to specified vertices and polygons
 // Optional parameter transform can be used to perform additional transformations
-function drawGeometry(context, object, transform = {x:WIDTH/4, y:HEIGHT/4, z:0}) {
+function drawGeometry(context, object, transform = {x:0, y:0, z:0}) {
   for (var i = 0; i < object.polygons.length; i++) {
     var p1 = object.vertices[object.polygons[i][0]]
     var p2 = object.vertices[object.polygons[i][1]]
@@ -63,5 +63,6 @@ function drawLine3d(context, p1, p2) {
   var y1 = Math.round(p1.y * (camera / p1.z))
   var x2 = Math.round(p2.x * (camera / p2.z))
   var y2 = Math.round(p2.y * (camera / p2.z))
-  drawLine(context, x1, y1, x2, y2);
+
+  drawLine(context, x1 + WIDTH/2, y1 + HEIGHT/2, x2 + WIDTH/2, y2 + HEIGHT/2);
 }
