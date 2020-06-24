@@ -14,9 +14,51 @@
             <nav>
                 <div class="form-group row">
                     <label for="gear" class="col-sm-3 col-form-label">Choose the type of transformation:<br>
-                        <br>Load graphics data file: 
-                        <input class="form-control-file" type="file" name="file" value="#000000"><br><br>
+                        <span style="color:red">(Click on canvas to apply)</span><br><br>Load graphics data file: 
+                        <input class="form-control-file" type="file" name="file" value="#000000">
+                        <button id="reset-button">Reset Graphics</button>
                     </label>
+                    <div class="col-sm-9 row">
+                        <div class="col-sm-3">
+                            <label for="projection">Projection</label>
+
+                            <select id="projection", name="projection">
+                                <option value="type1">Perspective</option>
+                                <option value="type2">Parallel Orthographic</option>
+                                <option value="type3">Parallel Oblique</option>
+                            </select> 
+                        </div>
+                        <div class="col-sm-3">
+                            <label>Scaling<input type="radio" name="shapeRadioBtn" class="form-control" value="scaling" min="0"></label>
+                        </div>
+                        <div class="col-sm-3">
+                            <label>Rotating<input type="radio" name="shapeRadioBtn" class="form-control" value="rotating" min="0" max="360"></label>
+                        </div>
+                        <div class="col-sm-3">
+
+                        </div>
+                    </div>
+                    <div class="col-sm-9 row">
+                        <div class="col-sm-3">
+                            <label>Hidden Surface Removal<input type="checkbox" name="hidden" class="form-control" value="yes" ></label>
+                        </div>
+                        <div class="col-sm-3">
+                            <label>Scale size: <input type="number" name="scale" class="form-control" value="1" step="0.1"></label><h6></h6>
+                        </div>
+                        <div class="col-sm-3">
+                            <label>Degrees:<input type="number" name="rotation" class="form-control" value="90" step="1"></label><h6></h6>
+                        </div>
+                        <div class="col-sm-3">
+                            <label for="axis">Rotate Axis:</label><br>
+
+                            <select id="axis", name="axis">
+                              <option value="type1">X</option>
+                              <option value="type2">Y</option>
+                              <option value="type3">Z</option>
+                            </select> 
+                        </div>
+                    </div>
+                </div>
             </nav>
         </header>
         <canvas width="1000" height="700" style="border: 5px solid grey; box-sizing:content-box;"></canvas>               
