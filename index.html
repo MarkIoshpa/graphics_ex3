@@ -13,9 +13,9 @@
         <header>
             <nav>
                 <div class="form-group row">
-                    <label for="gear" class="col-sm-3 col-form-label">Choose the type of transformation:<br>
-                        <span style="color:red">(Click on canvas to apply)</span><br><br>Load graphics data file: 
-                        <input class="form-control-file" type="file" name="file" value="#000000">
+                    <label for="gear" class="col-sm-3 col-form-label">Computer Graphics 3D<br>
+                        <br>Load graphics data file: 
+                        <input class="form-control-file" type="file" name="file" value="#000000"><br>
                         <button id="reset-button">Reset Graphics</button>
                     </label>
                     <div class="col-sm-9 row">
@@ -23,27 +23,28 @@
                             <label for="projection">Projection</label>
 
                             <select id="projection", name="projection">
-                                <option value="type1">Perspective</option>
-                                <option value="type2">Parallel Orthographic</option>
-                                <option value="type3">Parallel Oblique</option>
+                                <option value="Perspective">Perspective</option>
+                                <option value="Orthographic">Parallel Orthographic</option>
+                                <option value="Oblique">Parallel Oblique</option>
                             </select> 
                         </div>
-                        <div class="col-sm-3">
-                            <label>Scaling<input type="radio" name="shapeRadioBtn" class="form-control" value="scaling" min="0"></label>
+                        <div class="col-sm-2">
+                            <label>Perspective Distance:<input type="number" name="camera" class="form-control" value="300" step="1"></label>
                         </div>
                         <div class="col-sm-3">
-                            <label>Rotating<input type="radio" name="shapeRadioBtn" class="form-control" value="rotating" min="0" max="360"></label>
+                            <label>Rotation</label><br>
+                            <button id="rotate">Apply Rotation</button>
                         </div>
-                        <div class="col-sm-3">
-
+                        <div class="col-sm-2">
+                            <label>Scaling <input type="number" name="scale" class="form-control" value="1" step="0.1"></label><h6></h6>
                         </div>
                     </div>
                     <div class="col-sm-9 row">
                         <div class="col-sm-3">
                             <label>Hidden Surface Removal<input type="checkbox" name="hidden" class="form-control" value="yes" ></label>
                         </div>
-                        <div class="col-sm-3">
-                            <label>Scale size: <input type="number" name="scale" class="form-control" value="1" step="0.1"></label><h6></h6>
+                        <div class="col-sm-2">
+                            <label>Oblique Angle:<input type="number" name="delta" class="form-control" value="45" step="1"></label>
                         </div>
                         <div class="col-sm-3">
                             <label>Degrees:<input type="number" name="rotation" class="form-control" value="90" step="1"></label><h6></h6>
@@ -61,7 +62,7 @@
                 </div>
             </nav>
         </header>
-        <canvas width="1000" height="700" style="border: 5px solid grey; box-sizing:content-box;"></canvas>               
+        <canvas width="1000" height="1000" style="border: 5px solid grey; box-sizing:content-box;"></canvas>               
     </div>
     <script src="script.js"></script>
 </body>
