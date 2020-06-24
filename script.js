@@ -20,9 +20,7 @@ $(document).ready(function() {
 
   $('input[name=scale]').change(function(){
       scale = $( 'input[name=scale]' ).val();
-      context.clearRect(0, 0, WIDTH, HEIGHT);
-      drawGeometry(context, data.cube, {x: scale, y: scale, z: scale});
-      drawGeometry(context, data.pyramid, {x: scale, y: scale, z: scale});
+      redraw(context, data, {x: scale, y: scale, z: scale});
   });
 
   $('select[name=axis]').change(function(){
@@ -35,17 +33,17 @@ $(document).ready(function() {
 
   $('input[name=camera]').change(function(){
     camera = $( 'input[name=camera]' ).val();
+    redraw(context, data);
   });
 
   $('input[name=delta]').change(function(){
     delta = $( 'input[name=delta]' ).val();
+    redraw(context, data);
   });
 
   $('select[name=projection]').change(function(){
     projection = $( 'select[name=projection]' ).val();
-    context.clearRect(0, 0, WIDTH, HEIGHT);
-    drawGeometry(context, data.cube);
-    drawGeometry(context, data.pyramid);
+    redraw(context, data);
   });
 
   $('input[name=hidden]').click(function(){
@@ -107,7 +105,7 @@ function drawLine(context, startX, startY, endX, endY) {
 
 // Draw 3d line on canvas
 function drawLine3d(context, p1, p2) {
-  var x1, y1, x2, y2
+  var x1, y1, x2, y2;
 
   switch(projection) {
     case "Orthographic":
@@ -118,19 +116,27 @@ function drawLine3d(context, p1, p2) {
       break;
 
     case "Oblique":
-      x1 = Math.round(p1.x + p1.z / 2 * Math.cos(delta))
-      y1 = Math.round(p1.y + p1.z / 2 * Math.sin(delta))
-      x2 = Math.round(p2.x + p2.z / 2 * Math.cos(delta))
-      y2 = Math.round(p2.y + p2.z / 2 * Math.sin(delta))
+      let radian = delta * Math.PI/180;
+      x1 = Math.round(p1.x + p1.z / 2 * Math.cos(radian));
+      y1 = Math.round(p1.y + p1.z / 2 * Math.sin(radian));
+      x2 = Math.round(p2.x + p2.z / 2 * Math.cos(radian));
+      y2 = Math.round(p2.y + p2.z / 2 * Math.sin(radian));
       break;
 
     default:  // Default projection is perspective
-      x1 = Math.round(p1.x / ( 1 +  p1.z / camera ))
-      y1 = Math.round(p1.y / ( 1 +  p1.z / camera ))
-      x2 = Math.round(p2.x / ( 1 +  p2.z / camera ))
-      y2 = Math.round(p2.y / ( 1 +  p2.z / camera ))
+      x1 = Math.round(p1.x / ( 1 +  p1.z / camera ));
+      y1 = Math.round(p1.y / ( 1 +  p1.z / camera ));
+      x2 = Math.round(p2.x / ( 1 +  p2.z / camera ));
+      y2 = Math.round(p2.y / ( 1 +  p2.z / camera ));
       break;
   }
 
   drawLine(context, x1 + WIDTH/2, y1 + HEIGHT/2, x2 + WIDTH/2, y2 + HEIGHT/2);
+}
+
+// Redraws the cube and pyramid
+function redraw(context, data, scaling = {x:1, y:1, z:1}) {
+  context.clearRect(0, 0, WIDTH, HEIGHT);
+  drawGeometry(context, data.cube, scaling);
+  drawGeometry(context, data.pyramid, scaling);
 }
