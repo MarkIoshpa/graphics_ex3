@@ -3,24 +3,26 @@
 var camera = 300;
 var projection = "perspective";
 var delta = 45;
-const WIDTH = 1000, HEIGHT = 1000;
+var scale = 1;
+const WIDTH = 1000, HEIGHT = 700;
 
 // On page load
 $(document).ready(function() {
   var data = null;
+  var source = null;
   var canvas = $("canvas");
   var context = canvas[0].getContext('2d');
-  var scale = $( 'input[name=scale]' ).val();
   var axis = $( 'select[name=axis]' ).val();
   var rotation = $( 'input[name=rotation]' ).val();
   var hidden = $( 'input[name=hidden]' ).is(":checked") ? true : false;
+  scale = $( 'input[name=scale]' ).val();
   projection = $( 'select[name=projection]' ).val();
   camera = $( 'input[name=camera]' ).val();
   delta = $( 'input[name=delta]' ).val();
 
   $('input[name=scale]').change(function(){
       scale = $( 'input[name=scale]' ).val();
-      redraw(context, data, {x: scale, y: scale, z: scale});
+      redraw(context, data);
   });
 
   $('select[name=axis]').change(function(){
@@ -48,10 +50,10 @@ $(document).ready(function() {
 
   $('input[name=hidden]').click(function(){
     if($(this).is(":checked")){
-      hidden = true
+      hidden = true;
     }
     else if($(this).is(":not(:checked)")){
-      hidden = false
+      hidden = false;
     }
   });
 
@@ -62,6 +64,7 @@ $(document).ready(function() {
       context.clearRect(0, 0, WIDTH, HEIGHT); // clear canvas on new file load
       try {
         data = JSON.parse(event.target.result);
+        source = JSON.parse(event.target.result);
         drawObject(context, data);
       } catch (error) {
         data = null;
@@ -70,24 +73,84 @@ $(document).ready(function() {
     }
     reader.readAsText(event.target.files[0]);
   });
+
+  // Reset canvas to original file
+  $( "#reset-button" ).click(function() {
+    data = JSON.parse(JSON.stringify(source));
+    $( 'input[name=scale]' ).val(1);
+    scale = 1;
+    redraw(context, data);
+  });
+
+  // Rotation
+  $( "#rotate-button" ).click(function() {
+    rotateObject(context, data.cube, rotation, axis);
+    rotateObject(context, data.pyramid, rotation, axis);
+    redraw(context, data);
+  });
 })
 
-// Draw cube and pyramid
+// Rotates 3D object a number of degrees specified by rotation, around the specified axis
+function rotateObject(context, object, rotation, axis) {
+  let radian = rotation * Math.PI/180;
+
+  switch(axis) {
+    case "X":
+      transformObject(object, [[1, 0, 0],[0, Math.cos(radian), Math.sin(radian)], [0, -Math.sin(radian), Math.cos(radian)]]);
+      break;
+
+    case "Y":
+      transformObject(object, [[Math.cos(radian), 0, -Math.sin(radian)],[0, 1, 0], [Math.sin(radian), 0, Math.cos(radian)]]);
+      break;
+
+    case "Z":
+      transformObject(object, [[Math.cos(radian), Math.sin(radian), 0],[-Math.sin(radian), Math.cos(radian), 0], [0, 0, 1]]);
+      break;
+
+    default:
+      break;
+  }
+}
+
+// Applies transformation to all points in object vertices
+function transformObject(object, matrix) {
+  for(let i = 0; i < object.vertices.length; i++)
+    transform(object.vertices[i], matrix);
+}
+
+// Draw cube and pyramid from file data
 function drawObject(context, data) {
-  drawGeometry(context, data.cube);
-  drawGeometry(context, data.pyramid);
+  let errorArray = [];
+
+  if(typeof(data.pyramid) === "undefined") {
+    alert("File doesn't contain pyramid!");
+    return;
+  }
+
+  if(typeof(data.cube) === "undefined") {
+    alert("File doesn't contain cube!");
+    return;
+  }
+
+  if(validate(data.pyramid, "Pyramid", errorArray) && validate(data.cube, "Cube", errorArray)) {
+    drawGeometry(context, data.cube);
+    drawGeometry(context, data.pyramid);
+  }
+  else {
+    alert("File contains errors!\n\n" + errorArray + '.');
+  }
 }
 
 // Draws 3d object according to specified vertices and polygons
 // Optional parameter transform can be used to perform additional transformations
-function drawGeometry(context, object, scaling = {x:1, y:1, z:1}) {
+function drawGeometry(context, object) {
   for (var i = 0; i < object.polygons.length; i++) {
     var p1 = object.vertices[object.polygons[i][0]]
     var p2 = object.vertices[object.polygons[i][1]]
     var p3 = object.vertices[object.polygons[i][2]]
-    var newP1 = {x: p1[0] * scaling.x, y: p1[1] * scaling.y, z: p1[2] * scaling.z}
-    var newP2 = {x: p2[0] * scaling.x, y: p2[1] * scaling.y, z: p2[2] * scaling.z}
-    var newP3 = {x: p3[0] * scaling.x, y: p3[1] * scaling.y, z: p3[2] * scaling.z}
+    var newP1 = {x: p1[0] * scale, y: p1[1] * scale, z: p1[2] * scale}
+    var newP2 = {x: p2[0] * scale, y: p2[1] * scale, z: p2[2] * scale}
+    var newP3 = {x: p3[0] * scale, y: p3[1] * scale, z: p3[2] * scale}
     drawLine3d(context, newP1, newP2)
     drawLine3d(context, newP2, newP3)
     drawLine3d(context, newP3, newP1)
@@ -135,8 +198,74 @@ function drawLine3d(context, p1, p2) {
 }
 
 // Redraws the cube and pyramid
-function redraw(context, data, scaling = {x:1, y:1, z:1}) {
+function redraw(context, data) {
+  if(data === null)
+    return;
+
   context.clearRect(0, 0, WIDTH, HEIGHT);
-  drawGeometry(context, data.cube, scaling);
-  drawGeometry(context, data.pyramid, scaling);
+  drawGeometry(context, data.cube);
+  drawGeometry(context, data.pyramid);
+}
+
+// Performs the transform operation on a point
+function transform(point, matrix) {
+  let result = multiplyMatrixByVector(matrix, [point[0], point[1], point[2]]);
+  point[0] = result[0];
+  point[1] = result[1];
+  point[2] = result[2];
+}
+
+// multiplyMatrixByVector returns an array representing the vector that results from multiplying matrix m by vector v
+function multiplyMatrixByVector(m, v) {
+  result = new Array(m.length);
+  for (let i = 0; i < m.length; i++) {
+      result[i] = 0;
+      for (let j = 0; j < v.length; j++) {
+          result[i] += m[i][j] * v[j];
+      }
+  }
+  return result;
+}
+
+// Validates that object contains all required fields, writes missing field errors into errorArray
+function validate(object, objectName, errorArray) {
+  let errorFlag = true; // true if no errors
+  
+  if(typeof(object.vertices) === "undefined") {
+    errorArray.push("\n" + objectName + " missing vertices field");
+    errorFlag = false;
+  }
+
+  if(typeof(object.polygons) === "undefined") {
+    errorArray.push("\n" + objectName + " missing polygons field");
+    errorFlag = false;
+  }
+
+  if(!Array.isArray(object.vertices)) {
+    errorArray.push("\n" + objectName + " vertices isn't an array");
+    errorFlag = false;
+  }
+  else {
+    for(let i = 0; i < object.vertices.length; i++) {
+      if((!Array.isArray(object.vertices[i])) || (object.vertices[i].length !== 3)) {
+        errorArray.push("\n" + objectName + " vertices contains invalid point coordinate on " + i + " position");
+        errorFlag = false;
+      }
+    }
+  }
+
+  if(!Array.isArray(object.polygons)) {
+    errorArray.push("\n" + objectName + " polygons isn't an array");
+    errorFlag = false;
+  }
+  else {
+    for(let i = 0; i < object.polygons.length; i++) {
+      if((!Array.isArray(object.polygons[i])) || (object.polygons[i].length !== 3)) {
+        errorArray.push("\n" + objectName + " polygons contains polygon on " + i + " position that doesn't have 3 vertex indices");
+        errorFlag = false;
+      }
+    }  
+  }
+
+  return errorFlag;
 }
