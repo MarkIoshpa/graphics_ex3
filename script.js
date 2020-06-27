@@ -133,8 +133,7 @@ function drawObject(context, data) {
   }
 
   if(validate(data.pyramid, "Pyramid", errorArray) && validate(data.cube, "Cube", errorArray)) {
-    drawGeometry(context, data.cube);
-    drawGeometry(context, data.pyramid);
+    redraw(context, data);
   }
   else {
     alert("File contains errors!\n\n" + errorArray + '.');
@@ -144,31 +143,42 @@ function drawObject(context, data) {
 // Draws 3d object according to specified vertices and polygons
 // Optional parameter transform can be used to perform additional transformations
 function drawGeometry(context, object) {
-  for (var i = 0; i < object.polygons.length; i++) {
-    var p1 = object.vertices[object.polygons[i][0]]
-    var p2 = object.vertices[object.polygons[i][1]]
-    var p3 = object.vertices[object.polygons[i][2]]
-    var newP1 = {x: p1[0] * scale, y: p1[1] * scale, z: p1[2] * scale}
-    var newP2 = {x: p2[0] * scale, y: p2[1] * scale, z: p2[2] * scale}
-    var newP3 = {x: p3[0] * scale, y: p3[1] * scale, z: p3[2] * scale}
-    drawLine3d(context, newP1, newP2)
-    drawLine3d(context, newP2, newP3)
-    drawLine3d(context, newP3, newP1)
+  for (let i = 0; i < object.polygons.length; i++) {
+    let p1 = object.vertices[object.polygons[i][0]];
+    let p2 = object.vertices[object.polygons[i][1]];
+    let p3 = object.vertices[object.polygons[i][2]];
+    let newP1 = {x: p1[0] * scale, y: p1[1] * scale, z: p1[2] * scale};
+    let newP2 = {x: p2[0] * scale, y: p2[1] * scale, z: p2[2] * scale};
+    let newP3 = {x: p3[0] * scale, y: p3[1] * scale, z: p3[2] * scale};
+    
+    if(object.polygons[i].length === 4) {
+      let p4 = object.vertices[object.polygons[i][3]];
+      let newP4 = {x: p4[0] * scale, y: p4[1] * scale, z: p4[2] * scale};
+      drawPolygon3d(context, newP1, newP2, newP3, newP4);
+    }
+    else {
+      drawPolygon3d(context, newP1, newP2, newP3);
+    }
   }
 }
 
-// Draw 2d line on canvas
-function drawLine(context, startX, startY, endX, endY) {
+// Draw polygon with 3 or 4 points
+function drawPolygon(context, x1, y1, x2, y2, x3, y3, x4=null, y4=null) {
   context.beginPath();
-  context.moveTo(startX, startY);
-  context.lineTo(endX, endY);
-  context.stroke();
+  context.moveTo(x1, y1);
+  context.lineTo(x2, y2);
+  context.lineTo(x3, y3);
+  if(x4 !== null && y4 !== null)
+    context.lineTo(x4, y4);
   context.closePath();
+  context.stroke();
+  context.fillStyle = "white";
+  context.fill();
 }
 
-// Draw 3d line on canvas
-function drawLine3d(context, p1, p2) {
-  var x1, y1, x2, y2;
+// Draw polygon while applying 3d projection
+function drawPolygon3d(context, p1, p2, p3, p4=null) {
+  var x1, y1, x2, y2, x3, y3, x4, y4;
 
   switch(projection) {
     case "Orthographic":
@@ -176,6 +186,12 @@ function drawLine3d(context, p1, p2) {
       y1 = p1.y;
       x2 = p2.x;
       y2 = p2.y;
+      x3 = p3.x;
+      y3 = p3.y;
+      if(p4 !== null) {
+        x4 = p4.x;
+        y4 = p4.y;
+      }
       break;
 
     case "Oblique":
@@ -184,6 +200,12 @@ function drawLine3d(context, p1, p2) {
       y1 = Math.round(p1.y + p1.z / 2 * Math.sin(radian));
       x2 = Math.round(p2.x + p2.z / 2 * Math.cos(radian));
       y2 = Math.round(p2.y + p2.z / 2 * Math.sin(radian));
+      x3 = Math.round(p3.x + p3.z / 2 * Math.cos(radian));
+      y3 = Math.round(p3.y + p3.z / 2 * Math.sin(radian));
+      if(p4 !== null) {
+        x4 = Math.round(p4.x + p4.z / 2 * Math.cos(radian));
+        y4 = Math.round(p4.y + p4.z / 2 * Math.sin(radian));
+      }
       break;
 
     default:  // Default projection is perspective
@@ -191,10 +213,19 @@ function drawLine3d(context, p1, p2) {
       y1 = Math.round(p1.y / ( 1 +  p1.z / camera ));
       x2 = Math.round(p2.x / ( 1 +  p2.z / camera ));
       y2 = Math.round(p2.y / ( 1 +  p2.z / camera ));
+      x3 = Math.round(p3.x / ( 1 +  p3.z / camera ));
+      y3 = Math.round(p3.y / ( 1 +  p3.z / camera ));
+      if(p4 !== null) {
+        x4 = Math.round(p4.x / ( 1 +  p4.z / camera ));
+        y4 = Math.round(p4.y / ( 1 +  p4.z / camera ));
+      }
       break;
   }
 
-  drawLine(context, x1 + WIDTH/2, y1 + HEIGHT/2, x2 + WIDTH/2, y2 + HEIGHT/2);
+  if(p4 !== null)
+    drawPolygon(context, x1 + WIDTH/2, y1 + HEIGHT/2, x2 + WIDTH/2, y2 + HEIGHT/2, x3 + WIDTH/2, y3 + HEIGHT/2, x4 + WIDTH/2, y4 + HEIGHT/2); 
+  else
+    drawPolygon(context, x1 + WIDTH/2, y1 + HEIGHT/2, x2 + WIDTH/2, y2 + HEIGHT/2, x3 + WIDTH/2, y3 + HEIGHT/2);
 }
 
 // Redraws the cube and pyramid
@@ -203,8 +234,32 @@ function redraw(context, data) {
     return;
 
   context.clearRect(0, 0, WIDTH, HEIGHT);
+  sortByZ(data.cube);
+  sortByZ(data.pyramid);
   drawGeometry(context, data.cube);
   drawGeometry(context, data.pyramid);
+}
+
+// Sort polygons by their Z
+function sortByZ(object) {
+  object.polygons.sort((a, b) => {
+    let averageAz, averageBz
+    if(a.length === 3) {
+      averageAz = (object.vertices[a[0]][2] + object.vertices[a[1]][2] + object.vertices[a[2]][2])/3
+    }
+    else if(a.length === 4) {
+      averageAz = (object.vertices[a[0]][2] + object.vertices[a[1]][2] + object.vertices[a[2]][2] + object.vertices[a[3]][2])/4
+    }
+    if(b.length === 3) {
+      averageBz = (object.vertices[b[0]][2] + object.vertices[b[1]][2] + object.vertices[b[2]][2])/3
+    }
+    else if(b.length === 4) {
+      averageBz = (object.vertices[b[0]][2] + object.vertices[b[1]][2] + object.vertices[b[2]][2] + object.vertices[b[3]][2])/4
+    }
+
+    return averageBz - averageAz
+
+  })
 }
 
 // Performs the transform operation on a point
@@ -260,8 +315,8 @@ function validate(object, objectName, errorArray) {
   }
   else {
     for(let i = 0; i < object.polygons.length; i++) {
-      if((!Array.isArray(object.polygons[i])) || (object.polygons[i].length !== 3)) {
-        errorArray.push("\n" + objectName + " polygons contains polygon on " + i + " position that doesn't have 3 vertex indices");
+      if((!Array.isArray(object.polygons[i])) || (object.polygons[i].length < 3)) {
+        errorArray.push("\n" + objectName + " polygons contains polygon on " + i + " position that doesn't have at least 3 vertex indices");
         errorFlag = false;
       }
     }  
